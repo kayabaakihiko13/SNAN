@@ -2,6 +2,7 @@
 #define CONTROL_H
 
 #include <stdio.h>
+#include <string.h>
 
 #include "./utils.h"
 
@@ -33,8 +34,8 @@ void process_input(GameState *game){
   }
 }
 
+
 void update_game(GameState *game) {
-    game->ate_food = false;
     // Move tail
     Position prev = game->tail[0];
     game->tail[0] = game->head;
@@ -69,7 +70,6 @@ void update_game(GameState *game) {
     // Check fruit collision
     if (game->head.x == game->fruit.x && game->head.y == game->fruit.y) {
         game->score += FRUIT_VALUE;
-        game->ate_food = true;
         game->fruit.x = (rand() % (WIDTH-2)) + 1;
         game->fruit.y = (rand() % (HEIGHT-2)) + 1;
         if (game->tail_length < MAX_TAIL) {

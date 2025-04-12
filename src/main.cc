@@ -6,7 +6,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-
 #include "../include/utils.h"
 #include "../include/render.h"
 #include "../include/control.h"
@@ -18,50 +17,56 @@ int main() {
     initscr();
     start_color();
     init_colors();
+    curs_set(0);
 
-    // Show title screen first
-    show_title_screen();
-
-    // Title screen input handling
-    int title_choice = 0;
-    while (title_choice != '1' && title_choice != '3') {
-        title_choice = getch();
-        if (title_choice == '2') {
-            clear();
-            const char* controls[] = {
-                "CONTROLS",
-                "WASD or Arrow Keys - Move",
-                "X - Quit Game",
-                "Press any key to return"
-            };
-            
-            for(int i = 0; i < 4; i++) {
-                mvaddstr(5 + i*2, WIDTH/2 - 15, controls[i]);
-            }
-            refresh();
-            
-            nodelay(stdscr, FALSE);  // Mode blocking input
-            getch();
-            nodelay(stdscr, TRUE);
-            show_title_screen();
-        }
-    }
-
-    if (title_choice == '3') {
-        endwin();
-        return 0;
-    }
-
-    // Game loop
+    // Game loop variables
     GameState game;
     char play_again;
 
     do {
+        // Show title screen first
+        show_title_screen();
+
+        // Title screen input handling
+        int title_choice;
+        bool game_started = false;
+        bool quit_program = false;
+
+        while (!game_started && !quit_program) {
+            title_choice = getch();
+
+            switch (title_choice) {
+                case '1': // Start Game
+                    game_started = true;
+                    break;
+                    
+                case '2': // Controls
+                    show_controls_screen();
+                    show_title_screen();
+                    break;
+                    
+                case '3': // Highscores
+                    show_highscore_screen();
+                    show_title_screen();
+                    break;
+                    
+                case '4': // Quit
+                    quit_program = true;
+                    break;
+                    
+                default:
+                    // Ignore other inputs
+                    break;
+            }
+        }
+        if (quit_program) {
+            break;
+        }
+
         // Game setup
         clear();
         noecho();
         cbreak();
-        curs_set(0);
         keypad(stdscr, TRUE);
         nodelay(stdscr, TRUE);
 
@@ -73,23 +78,24 @@ int main() {
             draw_game(&game);
             process_input(&game);
             update_game(&game);
-            int current_speed = INITIAL_SPEED -(game.score * SPEED_INCREMENT); 
-            if(current_speed <MIN_SPEED){
-              current_speed = MIN_SPEED;
+            
+            int current_speed = INITIAL_SPEED - (game.score * SPEED_INCREMENT);
+            if(current_speed < MIN_SPEED) {
+                current_speed = MIN_SPEED;
             }
             usleep(current_speed);
         }
 
-        // Game over screen
+        // Save highscore and show game over
+        save_highscore(game.score);
         show_game_over_screen(game.score);
 
         // Play again prompt
-        timeout(-1);
+        nodelay(stdscr, FALSE);
         play_again = getch();
 
     } while (play_again == 'Y' || play_again == 'y');
 
     endwin();
     return 0;
-
 }

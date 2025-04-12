@@ -27,6 +27,11 @@ inline void show_game_over_screen(int score);
 
 inline void show_title_screen();
 
+inline void save_highscore(int score);
+inline void read_highscores(HighScore *scores, int *count);
+inline void add_highscore(HighScore *scores, int *count, HighScore new_hs);
+inline void show_highscore_screen();
+
 void show_game_over_screen(int score) {
     // Switch to blocking input for the menu
     nocbreak();
@@ -66,7 +71,6 @@ void setup_game(GameState *game){
 
   // this setup initial value
   game->game_over = 0;
-  game->ate_food = false;
   game->direction = STOP;
   game->head.x = WIDTH /2;
   game->head.y = HEIGHT /2;
@@ -97,7 +101,8 @@ void show_title_screen() {
     attron(COLOR_PAIR(COLOR_YELLOW));
     mvprintw(15, WIDTH/2-8, "1. Start Game");
     mvprintw(16, WIDTH/2-8, "2. Controls");
-    mvprintw(17, WIDTH/2-8, "3. Quit");
+    mvprintw(17, WIDTH/2-8, "3. HighScore");
+    mvprintw(18,WIDTH/2-8,"4. Quit");
     attroff(COLOR_PAIR(COLOR_YELLOW));
 
     refresh();
@@ -138,5 +143,97 @@ void draw_game(GameState *game) {
     mvprintw(HEIGHT+1, 0, "Press 'x' to quit");
     
     refresh();
+}
+
+void show_controls_screen() {
+    clear();
+    attron(COLOR_PAIR(COLOR_YELLOW));
+    mvprintw(5, WIDTH/2-10, "CONTROLS");
+    mvprintw(7, WIDTH/2-15, "WASD or Arrow Keys - Move");
+    mvprintw(8, WIDTH/2-15, "X - Quit Game");
+    mvprintw(10, WIDTH/2-15, "Press any key to return");
+    attroff(COLOR_PAIR(COLOR_YELLOW));
+    refresh();
+    getch();
+}
+
+
+void read_highscores(HighScore *scores, int *count) {
+    FILE *f = fopen(HS_FILE, "rb");
+    *count = 0;
+    
+    if(f) {
+        while(*count < MAX_HS_ENTRIES && 
+              fread(&scores[*count], sizeof(HighScore), 1, f) == 1) {
+            (*count)++;
+        }
+        fclose(f);
+    }
+}
+
+void add_highscore(HighScore *scores, int *count, HighScore new_hs) {
+    // Cari posisi untuk score baru
+    int i = *count;
+    while(i > 0 && new_hs.score > scores[i-1].score) {
+        if(i < MAX_HS_ENTRIES) scores[i] = scores[i-1];
+        i--;
+    }
+    
+    if(i < MAX_HS_ENTRIES) {
+        scores[i] = new_hs;
+        if(*count < MAX_HS_ENTRIES) (*count)++;
+    }
+}
+
+void save_highscore(int score) {
+    HighScore scores[MAX_HS_ENTRIES];
+    int count = 0;
+    read_highscores(scores, &count);
+
+    HighScore new_hs = {score, "AAA"};
+    
+    // Jika score masuk dalam highscore
+    if(count < MAX_HS_ENTRIES || score > scores[MAX_HS_ENTRIES-1].score) {
+        echo();
+        curs_set(1);
+        mvprintw(10, WIDTH/2-10, "NEW HIGHSCORE!");
+        mvprintw(12, WIDTH/2-10, "Enter initials (3 letters): ");
+        getnstr(new_hs.name, 3);
+        noecho();
+        curs_set(0);
+        
+        add_highscore(scores, &count, new_hs);
+        
+        // Simpan ke file
+        FILE *f = fopen(HS_FILE, "wb");
+        if(f) {
+            fwrite(scores, sizeof(HighScore), count, f);
+            fclose(f);
+        }
+    }
+}
+
+void show_highscore_screen() {
+    clear();
+    HighScore scores[MAX_HS_ENTRIES];
+    int count = 0;
+    read_highscores(scores, &count);
+
+    attron(COLOR_PAIR(COLOR_YELLOW) | A_BOLD);
+    mvprintw(2, WIDTH/2-8, "TOP 10 HIGHSCORES");
+    attroff(A_BOLD);
+
+    for(int i = 0; i < count; i++) {
+        mvprintw(4 + i, WIDTH/2-10, "%2d. %-3s : %-5d", 
+                i+1, scores[i].name, scores[i].score);
+    }
+    
+    if(count == 0) {
+        mvprintw(5, WIDTH/2-8, "No scores yet!");
+    }
+    
+    mvprintw(18, WIDTH/2-12, "Press any key to continue");
+    refresh();
+    getch();
 }
 #endif
