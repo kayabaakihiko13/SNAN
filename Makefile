@@ -1,4 +1,3 @@
-# Compiler dan flags
 CC = g++
 CXXFLAGS = -g -O2 -Wall
 LDFLAGS = -lncurses
@@ -6,6 +5,7 @@ LDFLAGS = -lncurses
 # Direktori instalasi
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
+HS_FILE = snakehs
 TARGET = snake_game
 
 # File source
@@ -15,38 +15,50 @@ OBJS = $(SRCS:.cc=.o)
 
 # Warna untuk output terminal
 GREEN = \033[0;32m
+YELLOW = \033[0;33m
+BLUE = \033[0;34m
 NC = \033[0m
 
-.PHONY: all clean install uninstall run debug
+# Fungsi untuk print variabel
+define print-var
+	@printf "${YELLOW}%-12s${NC} = ${BLUE}%s${NC}\n" "$(1)" "$($(1))"
+endef
 
-all: $(TARGET)
+.PHONY: all clean install uninstall run debug vars
+
+all: vars $(TARGET)
 
 $(TARGET): $(OBJS)
-	@echo "$(GREEN)Linking...$(NC)"
+	@echo "\n${GREEN}🔗 Linking...${NC}"
 	$(CC) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
-	@echo "$(GREEN)Build selesai!$(NC)"
+	@echo "${GREEN}✅ Build selesai!${NC}\n"
 
 %.o: %.cc
-	@echo "$(GREEN)Compiling $<...$(NC)"
+	@echo "${GREEN}🔨 Compiling $<...${NC}"
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	@echo "$(GREEN)Membersihkan...$(NC)"
-	rm -f $(OBJS) $(TARGET)
+	@echo "\n${GREEN}🧹 Membersihkan...${NC}"
+	rm -f $(OBJS) $(TARGET) $(HS_FILE)
+	@echo "${GREEN}✅ File objek, binary, dan highscore dihapus${NC}\n"
 
 install: $(TARGET)
-	@echo "$(GREEN)Menginstal ke $(BINDIR)...$(NC)"
+	@echo "\n${GREEN}📦 Menginstal ke $(BINDIR)...${NC}"
 	install -d $(DESTDIR)$(BINDIR)
 	install -m 755 $(TARGET) $(DESTDIR)$(BINDIR)
+	rm -f $(HS_FILE)
+	@echo "${GREEN}✅ Instalasi selesai!${NC}\n"
 
 uninstall:
-	@echo "$(GREEN)Menghapus instalasi...$(NC)"
-	@echo "$(GREEN)Terima Kasih atas menginstall game ini"
+	@echo "\n${GREEN}🗑️ Menghapus instalasi...${NC}"
 	rm -f $(DESTDIR)$(BINDIR)/$(TARGET)
+	rm -f $(HS_FILE)
+	@echo "${GREEN}✅ Terima kasih telah menggunakan game ini${NC}\n"
 
 run: $(TARGET)
-	@echo "$(GREEN)Menjalankan game...$(NC)"
+	@echo "\n${GREEN}🎮 Menjalankan game...${NC}\n"
 	./$(TARGET)
 
 debug: CXXFLAGS += -DDEBUG -g3
 debug: clean $(TARGET)
+	@echo "\n${GREEN}🐛 Mode debug diaktifkan${NC}\n"
