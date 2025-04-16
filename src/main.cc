@@ -17,7 +17,6 @@ int main() {
     initscr();
     start_color();
     init_colors();
-    curs_set(0);
 
     // Game loop variables
     GameState game;
@@ -75,9 +74,9 @@ int main() {
 
         // Main game loop
         while (!game.game_over) {
-            draw_game(&game);
             process_input(&game);
             update_game(&game);
+            draw_game(&game);
             
             int current_speed = INITIAL_SPEED - (game.score * SPEED_INCREMENT);
             if(current_speed < MIN_SPEED) {

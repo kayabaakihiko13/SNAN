@@ -110,8 +110,8 @@ void show_title_screen() {
 
 
 void draw_game(GameState *game) {
-    clear();
-    
+    erase();  // Lebih efisien dari clear()
+
     // Draw borders
     attron(COLOR_PAIR(COLOR_GREEN));
     for (int i = 0; i < HEIGHT; i++) {
@@ -141,9 +141,10 @@ void draw_game(GameState *game) {
     // Draw score
     mvprintw(HEIGHT, 0, "Score: %d", game->score);
     mvprintw(HEIGHT+1, 0, "Press 'x' to quit");
-    
-    refresh();
+        
+    refresh();  // Non-blocking refresh
 }
+
 
 void show_controls_screen() {
     clear();

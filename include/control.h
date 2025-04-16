@@ -9,7 +9,6 @@
 inline void process_input(GameState *game);
 inline void update_game(GameState *game);
 
-
 void process_input(GameState *game){
 
   int ch = getch();
@@ -77,6 +76,5 @@ void update_game(GameState *game) {
         }
     }
 }
-
 
 #endif // !DEBUG
